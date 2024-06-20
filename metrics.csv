@@ -1,4 +1,4 @@
-Instance ID,Lowest CPU Utilization,Highest CPU Utilization,Lowest Memory Utilization,Highest Memory Utilization,Lowest Disk Read BPS,Highest Disk Read BPS,Lowest Disk Write BPS,Highest Disk Write BPS
-i-k1ai7qhhvjzzyznj7eaj,3.71%,69.81%,18.61%,99.23%,19.67 KB,109000.00 KB,118.60 KB,11239.80 KB
-i-k1ai7qhhvjzzyznj7eai,3.47%,63.64%,18.83%,99.39%,2.33 KB,103910.53 KB,116.33 KB,5132.33 KB
-i-k1ai7qhhvjzzyznj7eah,3.98%,63.15%,41.52%,99.33%,84.93 KB,107928.20 KB,213.20 KB,7692.67 KB
+Instance ID,Average CPU Utilization,Lowest CPU Utilization,Highest CPU Utilization,Average Memory Utilization,Lowest Memory Utilization,Highest Memory Utilization,Average Disk Read BPS,Lowest Disk Read BPS,Highest Disk Read BPS,Average Disk Write BPS,Lowest Disk Write BPS,Highest Disk Write BPS
+i-k1ai7qhhvjzzyznj7eaj,5.00%,3.71%,69.81%,67.48%,18.61%,99.23%,6027.54 KB,19.67 KB,109000.00 KB,88.71 KB,118.60 KB,11239.80 KB,3.71%,69.81%,18.61%,99.23%,19.67 KB,109000.00 KB,118.60 KB,11239.80 KB
+i-k1ai7qhhvjzzyznj7eai,5.26%,3.47%,63.64%,66.15%,18.83%,99.39%,8486.19 KB,2.33 KB,103910.53 KB,93.99 KB,116.33 KB,5132.33 KB,3.47%,63.64%,18.83%,99.39%,2.33 KB,103910.53 KB,116.33 KB,5132.33 KB
+i-k1ai7qhhvjzzyznj7eah,6.73%,3.98%,63.15%,85.51%,41.52%,99.33%,12366.77 KB,84.93 KB,107928.20 KB,107.28 KB,213.20 KB,7692.67 KB,3.98%,63.15%,41.52%,99.33%,84.93 KB,107928.20 KB,213.20 KB,7692.67 KB
