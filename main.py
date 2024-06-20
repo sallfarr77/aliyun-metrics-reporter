@@ -1,6 +1,7 @@
 import datetime
 import json
 import csv
+import statistics
 from aliyunsdkcore.client import AcsClient
 from aliyunsdkcms.request.v20190101.DescribeMetricListRequest import DescribeMetricListRequest
 from dotenv import load_dotenv
@@ -32,10 +33,15 @@ def get_metric_data(metric_name, namespace, dimensions, period='86400', start_ti
 
     return json.loads(response['Datapoints'])
 
-# Function to get minimum and maximum values
-def get_min_max(data, key):
+# Function to get minimum, maximum, and average values
+def get_min_max_avg(data, key):
     values = [float(dp[key]) for dp in data if key in dp]
-    return min(values), max(values)
+
+    if values:
+        return min(values), max(values), statistics.mean(values)
+    else:
+        return None, None, None
+
 
 # Function to convert a value from bytes to kilobytes
 def bytes_to_kilobytes(bytes):
@@ -45,10 +51,13 @@ def bytes_to_kilobytes(bytes):
 def write_to_csv(filename, instance_ids, rows):
     with open(filename, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
-        # Menulis header
-        writer.writerow(['Instance ID', 'Lowest CPU Utilization', 'Highest CPU Utilization', 'Lowest Memory Utilization', 'Highest Memory Utilization',
-                         'Lowest Disk Read BPS', 'Highest Disk Read BPS', 'Lowest Disk Write BPS', 'Highest Disk Write BPS'])
-        # Menulis data
+
+        # Writing header
+        writer.writerow(['Instance ID', 'Lowest CPU Utilization', 'Highest CPU Utilization', 'Average CPU Utilization',
+                         'Lowest Memory Utilization', 'Highest Memory Utilization', 'Average Memory Utilization',
+                         'Lowest Disk Read BPS', 'Highest Disk Read BPS', 'Average Disk Read BPS',
+                         'Lowest Disk Write BPS', 'Highest Disk Write BPS', 'Average Disk Write BPS'])
+        # Writing data
         for instance_id, row in zip(instance_ids, rows):
             writer.writerow([instance_id] + row)
 
@@ -76,26 +85,26 @@ for instance_id in instance_ids:
     disk_write_data = get_metric_data("DiskWriteBPS", "acs_ecs_dashboard", dimensions, start_time=start_time, end_time=end_time)
 
     # CPU Utilization
-    min_cpu, max_cpu = get_min_max(cpu_data, 'Maximum')
+    min_cpu, max_cpu, avg_cpu = get_min_max_avg(cpu_data, 'Maximum')
 
     # Memory Utilization
-    min_memory, max_memory = get_min_max(memory_data, 'Maximum')
+    min_memory, max_memory, avg_memory = get_min_max_avg(memory_data, 'Maximum')
 
     # Disk Read BPS
-    min_disk_read, max_disk_read = get_min_max(disk_read_data, 'Maximum')
+    min_disk_read, max_disk_read, avg_disk_read = get_min_max_avg(disk_read_data, 'Maximum')
 
     # Disk Write BPS
-    min_disk_write, max_disk_write = get_min_max(disk_write_data, 'Maximum')
+    min_disk_write, max_disk_write, avg_disk_write = get_min_max_avg(disk_write_data, 'Maximum')
 
     # Add data to the all_data list
     all_data.append([
-        f'{min_cpu:.2f}%', f'{max_cpu:.2f}%',
-        f'{min_memory:.2f}%', f'{max_memory:.2f}%',
-        f'{bytes_to_kilobytes(min_disk_read):.2f} KB', f'{bytes_to_kilobytes(max_disk_read):.2f} KB',
-        f'{bytes_to_kilobytes(min_disk_write):.2f} KB', f'{bytes_to_kilobytes(max_disk_write):.2f} KB'
+        f'{min_cpu:.2f}%', f'{max_cpu:.2f}%', f'{avg_cpu:.2f}%',
+        f'{min_memory:.2f}%', f'{max_memory:.2f}%', f'{avg_memory:.2f}%',
+        f'{bytes_to_kilobytes(min_disk_read):.2f} KB', f'{bytes_to_kilobytes(max_disk_read):.2f} KB', f'{bytes_to_kilobytes(avg_disk_read):.2f} KB',
+        f'{bytes_to_kilobytes(min_disk_write):.2f} KB', f'{bytes_to_kilobytes(max_disk_write):.2f} KB', f'{bytes_to_kilobytes(avg_disk_write):.2f} KB'
     ])
 
 # Write data into a CSV file
 write_to_csv('metrics.csv', instance_ids, all_data)
 
-print("Execution completed successfully!, see metrics.csv")
+print("Execution completed successfully! See metrics.csv")
