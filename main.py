@@ -6,18 +6,18 @@ from aliyunsdkcms.request.v20190101.DescribeMetricListRequest import DescribeMet
 from dotenv import load_dotenv
 import os
 
-# Memuat variabel lingkungan dari file .env
+# Load environment variables from .env file
 load_dotenv()
 
-# Mendapatkan kredensial dari variabel lingkungan
+# Get credentials from environment variables
 ACCESS_KEY_ID = os.getenv('ACCESS_KEY_ID')
 ACCESS_KEY_SECRET = os.getenv('ACCESS_KEY_SECRET')
 REGION_ID = os.getenv('REGION_ID')
 
-# Inisialisasi client
+# Client initialization
 client = AcsClient(ACCESS_KEY_ID, ACCESS_KEY_SECRET, REGION_ID)
 
-# Fungsi untuk mengambil metrik
+# Function to retrieve metrics
 def get_metric_data(metric_name, namespace, dimensions, period='86400', start_time=None, end_time=None):
     request = DescribeMetricListRequest()
     request.set_MetricName(metric_name)
@@ -32,16 +32,16 @@ def get_metric_data(metric_name, namespace, dimensions, period='86400', start_ti
 
     return json.loads(response['Datapoints'])
 
-# Fungsi untuk mendapatkan nilai minimum dan maksimum
+# Function to get minimum and maximum values
 def get_min_max(data, key):
     values = [float(dp[key]) for dp in data if key in dp]
     return min(values), max(values)
 
-# Fungsi untuk mengubah nilai dari byte ke kilobyte
+# Function to convert a value from bytes to kilobytes
 def bytes_to_kilobytes(bytes):
     return bytes / 1024
 
-# Fungsi untuk menulis data ke dalam file CSV
+# Function to write data into a CSV file
 def write_to_csv(filename, instance_ids, rows):
     with open(filename, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
@@ -52,24 +52,24 @@ def write_to_csv(filename, instance_ids, rows):
         for instance_id, row in zip(instance_ids, rows):
             writer.writerow([instance_id] + row)
 
-# Set parameter waktu
+# Set time parameters
 end_time = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 start_time = (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=30)).strftime("%Y-%m-%dT%H:%M:%SZ")
 
-# Baca instance IDs dari file
+# Read instance IDs from file
 with open('instance_ids.txt', 'r') as f:
     instance_ids = f.readlines()
 instance_ids = [x.strip() for x in instance_ids]
 
-# Inisialisasi list untuk menyimpan semua data
+# Initialize list to store all data
 all_data = []
 
-# Loop untuk setiap instance ID
+# Loop for each instance ID
 for instance_id in instance_ids:
     # Set dimensions
     dimensions = f'[{{"instanceId": "{instance_id}"}}]'
 
-    # Ambil data metrik untuk setiap instance
+    # Retrieve metric data for each instance
     cpu_data = get_metric_data("CPUUtilization", "acs_ecs_dashboard", dimensions, start_time=start_time, end_time=end_time)
     memory_data = get_metric_data("memory_usedutilization", "acs_ecs_dashboard", dimensions, start_time=start_time, end_time=end_time)
     disk_read_data = get_metric_data("DiskReadBPS", "acs_ecs_dashboard", dimensions, start_time=start_time, end_time=end_time)
@@ -87,7 +87,7 @@ for instance_id in instance_ids:
     # Disk Write BPS
     min_disk_write, max_disk_write = get_min_max(disk_write_data, 'Maximum')
 
-    # Menambahkan data ke dalam list all_data
+    # Add data to the all_data list
     all_data.append([
         f'{min_cpu:.2f}%', f'{max_cpu:.2f}%',
         f'{min_memory:.2f}%', f'{max_memory:.2f}%',
@@ -95,7 +95,7 @@ for instance_id in instance_ids:
         f'{bytes_to_kilobytes(min_disk_write):.2f} KB', f'{bytes_to_kilobytes(max_disk_write):.2f} KB'
     ])
 
-# Menulis data ke dalam file CSV
+# Write data into a CSV file
 write_to_csv('metrics.csv', instance_ids, all_data)
 
-print("Execution completed successfully!")
+print("Execution completed successfully!, see metrics.csv")
