@@ -36,10 +36,12 @@ def get_metric_data(metric_name, namespace, dimensions, period='86400', start_ti
 # Function to get minimum, maximum, and average values
 def get_min_max_avg(data, key):
     values = [float(dp[key]) for dp in data if key in dp]
+
     if values:
         return min(values), max(values), statistics.mean(values)
     else:
         return None, None, None
+
 
 # Function to convert a value from bytes to kilobytes
 def bytes_to_kilobytes(bytes):
@@ -49,6 +51,7 @@ def bytes_to_kilobytes(bytes):
 def write_to_csv(filename, instance_ids, rows):
     with open(filename, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
+
         # Writing header
         writer.writerow(['Instance ID', 'Lowest CPU Utilization', 'Highest CPU Utilization', 'Average CPU Utilization',
                          'Lowest Memory Utilization', 'Highest Memory Utilization', 'Average Memory Utilization',
