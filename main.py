@@ -36,12 +36,10 @@ def get_metric_data(metric_name, namespace, dimensions, period='86400', start_ti
 # Function to get minimum, maximum, and average values
 def get_min_max_avg(data, key):
     values = [float(dp[key]) for dp in data if key in dp]
-
     if values:
         return min(values), max(values), statistics.mean(values)
     else:
         return None, None, None
-
 
 # Function to convert a value from bytes to kilobytes
 def bytes_to_kilobytes(bytes):
@@ -51,15 +49,13 @@ def bytes_to_kilobytes(bytes):
 def write_to_csv(filename, instance_ids, rows):
     with open(filename, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
-
         # Writing header
         writer.writerow(['Instance ID', 'Lowest CPU Utilization', 'Highest CPU Utilization', 'Average CPU Utilization',
                          'Lowest Memory Utilization', 'Highest Memory Utilization', 'Average Memory Utilization',
                          'Lowest Disk Read BPS', 'Highest Disk Read BPS', 'Average Disk Read BPS',
                          'Lowest Disk Write BPS', 'Highest Disk Write BPS', 'Average Disk Write BPS'])
         # Writing data
-        for instance_id, row in zip(instance_ids, rows):
-            writer.writerow([instance_id] + row)
+        writer.writerows(rows)
 
 # Set time parameters
 end_time = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -96,12 +92,21 @@ for instance_id in instance_ids:
     # Disk Write BPS
     min_disk_write, max_disk_write, avg_disk_write = get_min_max_avg(disk_write_data, 'Maximum')
 
-    # Add data to the all_data list
+    # Append row to all_data
     all_data.append([
-        f'{min_cpu:.2f}%', f'{max_cpu:.2f}%', f'{avg_cpu:.2f}%',
-        f'{min_memory:.2f}%', f'{max_memory:.2f}%', f'{avg_memory:.2f}%',
-        f'{bytes_to_kilobytes(min_disk_read):.2f} KB', f'{bytes_to_kilobytes(max_disk_read):.2f} KB', f'{bytes_to_kilobytes(avg_disk_read):.2f} KB',
-        f'{bytes_to_kilobytes(min_disk_write):.2f} KB', f'{bytes_to_kilobytes(max_disk_write):.2f} KB', f'{bytes_to_kilobytes(avg_disk_write):.2f} KB'
+        instance_id,
+        f'{min_cpu:.2f}%' if min_cpu is not None else 'null',
+        f'{max_cpu:.2f}%' if max_cpu is not None else 'null',
+        f'{avg_cpu:.2f}%' if avg_cpu is not None else 'null',
+        f'{min_memory:.2f}%' if min_memory is not None else 'null',
+        f'{max_memory:.2f}%' if max_memory is not None else 'null',
+        f'{avg_memory:.2f}%' if avg_memory is not None else 'null',
+        f'{bytes_to_kilobytes(min_disk_read):.2f} KB' if min_disk_read is not None else 'null',
+        f'{bytes_to_kilobytes(max_disk_read):.2f} KB' if max_disk_read is not None else 'null',
+        f'{bytes_to_kilobytes(avg_disk_read):.2f} KB' if avg_disk_read is not None else 'null',
+        f'{bytes_to_kilobytes(min_disk_write):.2f} KB' if min_disk_write is not None else 'null',
+        f'{bytes_to_kilobytes(max_disk_write):.2f} KB' if max_disk_write is not None else 'null',
+        f'{bytes_to_kilobytes(avg_disk_write):.2f} KB' if avg_disk_write is not None else 'null'
     ])
 
 # Write data into a CSV file
