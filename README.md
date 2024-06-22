@@ -1,48 +1,49 @@
 # Aliyun Metrics Reporter
 
-Aliyun Metrics Reporter is a tool for collecting and analyzing metrics from Aliyun ECS instances and saving them into a CSV file.
+Aliyun Metrics Reporter is a tool for reporting and analyzing ECS and CMS metrics from Aliyun. This tool collects metric data from various ECS instances and stores it in a CSV file for further analysis.
 
 ## Features
 
-- Fetches CPU Utilization, Memory Utilization, Disk Read BPS, and Disk Write BPS metrics from Aliyun ECS instances.
-- Saves metric data into a CSV file.
-- Uses environment variables to store Aliyun credentials.
+- Retrieves ECS instance names based on instance IDs.
+- Fetches CPU, memory, disk read, and disk write metrics from Aliyun CMS.
+- Computes minimum, maximum, and average values of the fetched metrics.
+- Stores metric data into a CSV file for easy analysis.
 
 ## Requirements
 
-- Python 3.x
-- Aliyun account with access to ECS API.
-- `.env` file to store Aliyun credentials.
+- Python 3.6 or newer
+- Aliyun account with access to ECS and CMS services
+- Environment variables configured in a `.env` file (see `.env.example` for required variables)
 
 ## Installation
 
-1. Clone this repository:
+1. Clone the repository:
 
-    ```bash
-    git clone https://github.com/sallfarr77/aliyun-metrics-reporter.git
-    cd aliyun-metrics-reporter
-    ```
+git clone https://github.com/yourusername/aliyun-metrics-reporter.git
+cd aliyun-metrics-reporter
 
-2. Create a virtual environment and activate it:
 
-    ```bash
-    python3 -m venv venv
-    source venv/bin/activate
-    ```
+2. Install dependencies:
 
-3. Install dependencies:
+pip install -r requirements.txt
 
-    ```bash
-    pip install -r requirements.txt
-    ```
+3. Set up your `.env` file with your Aliyun credentials:
 
-4. Create a `.env` file in the project directory and add your Aliyun credentials
-
-5. Prepare a `instance_ids.txt` file containing ECS instance IDs, one ID per line.
+mv .env.example .env
 
 ## Usage
 
-Run the main script to fetch metrics and save them into a CSV file:
+Run the main script to fetch and store metrics:
 
-```bash
-python3 main.py
+python3 src/main.py
+
+
+This will retrieve metrics for the ECS instances listed in `instance_ids.txt` and store the results in `metrics.csv`.
+
+## Contributing
+
+Contributions are welcome! If you have any ideas, suggestions, or bug fixes, please open an issue or a pull request on [GitHub](https://github.com/yourusername/aliyun-metrics-reporter).
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.

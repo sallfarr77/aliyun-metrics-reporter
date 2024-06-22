@@ -1,3 +1,4 @@
-aliyun-python-sdk-core
+alibabacloud_ecs20140526
+alibabacloud_tea_openapi
 aliyun-python-sdk-cms
 python-dotenv
