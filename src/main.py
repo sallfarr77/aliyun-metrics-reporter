@@ -1,68 +1,25 @@
-import datetime
-import json
-import csv
-import statistics
-from aliyunsdkcore.client import AcsClient
-from aliyunsdkcms.request.v20190101.DescribeMetricListRequest import DescribeMetricListRequest
-from dotenv import load_dotenv
+from datetime import datetime, timedelta, timezone
 import os
+from dotenv import load_dotenv
+from ecs_client import get_instance_name
+from cms_client import get_metric_data
+from metrics import get_min_max_avg
+from utils import bytes_to_kilobytes, write_to_csv
 
 # Load environment variables from .env file
 load_dotenv()
 
-# Get credentials from environment variables
-ACCESS_KEY_ID = os.getenv('ACCESS_KEY_ID')
-ACCESS_KEY_SECRET = os.getenv('ACCESS_KEY_SECRET')
-REGION_ID = os.getenv('REGION_ID')
-
-# Client initialization
-client = AcsClient(ACCESS_KEY_ID, ACCESS_KEY_SECRET, REGION_ID)
-
-# Function to retrieve metrics
-def get_metric_data(metric_name, namespace, dimensions, period='86400', start_time=None, end_time=None):
-    request = DescribeMetricListRequest()
-    request.set_MetricName(metric_name)
-    request.set_Namespace(namespace)
-    request.set_Period(period)
-    request.set_StartTime(start_time)
-    request.set_EndTime(end_time)
-    request.set_Dimensions(dimensions)
-
-    response = client.do_action_with_exception(request)
-    response = json.loads(response)
-
-    return json.loads(response['Datapoints'])
-
-# Function to get minimum, maximum, and average values
-def get_min_max_avg(data, key):
-    values = [float(dp[key]) for dp in data if key in dp]
-    if values:
-        return min(values), max(values), statistics.mean(values)
-    else:
-        return None, None, None
-
-# Function to convert a value from bytes to kilobytes
-def bytes_to_kilobytes(bytes):
-    return bytes / 1024
-
-# Function to write data into a CSV file
-def write_to_csv(filename, instance_ids, rows):
-    with open(filename, 'w', newline='') as csvfile:
-        writer = csv.writer(csvfile)
-        # Writing header
-        writer.writerow(['Instance ID', 'Lowest CPU Utilization', 'Highest CPU Utilization', 'Average CPU Utilization',
-                         'Lowest Memory Utilization', 'Highest Memory Utilization', 'Average Memory Utilization',
-                         'Lowest Disk Read BPS', 'Highest Disk Read BPS', 'Average Disk Read BPS',
-                         'Lowest Disk Write BPS', 'Highest Disk Write BPS', 'Average Disk Write BPS'])
-        # Writing data
-        writer.writerows(rows)
+# Read configuration from environment variables
+instance_ids_file = os.getenv('INSTANCE_IDS_FILE', 'instance_ids.txt')
+output_csv = os.getenv('OUTPUT_CSV', 'metrics.csv')
+days_delta = int(os.getenv('DAYS_DELTA', 30))
 
 # Set time parameters
-end_time = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-start_time = (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=30)).strftime("%Y-%m-%dT%H:%M:%SZ")
+end_time = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+start_time = (datetime.now(timezone.utc) - timedelta(days=days_delta)).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 # Read instance IDs from file
-with open('instance_ids.txt', 'r') as f:
+with open(instance_ids_file, 'r') as f:
     instance_ids = f.readlines()
 instance_ids = [x.strip() for x in instance_ids]
 
@@ -71,6 +28,9 @@ all_data = []
 
 # Loop for each instance ID
 for instance_id in instance_ids:
+    # Get instance name
+    instance_name = get_instance_name(instance_id)
+    
     # Set dimensions
     dimensions = f'[{{"instanceId": "{instance_id}"}}]'
 
@@ -95,6 +55,7 @@ for instance_id in instance_ids:
     # Append row to all_data
     all_data.append([
         instance_id,
+        instance_name,
         f'{min_cpu:.2f}%' if min_cpu is not None else 'null',
         f'{max_cpu:.2f}%' if max_cpu is not None else 'null',
         f'{avg_cpu:.2f}%' if avg_cpu is not None else 'null',
@@ -110,6 +71,6 @@ for instance_id in instance_ids:
     ])
 
 # Write data into a CSV file
-write_to_csv('metrics.csv', instance_ids, all_data)
+write_to_csv(output_csv, all_data)
 
-print("Execution completed successfully! See metrics.csv")
+print(f"Execution completed successfully! See {output_csv}")
